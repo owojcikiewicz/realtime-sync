@@ -1,0 +1,27 @@
+{
+  "name": "cksource-task",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index",
+  "scripts": {
+    "build": "tsc",
+    "production": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/owojcikiewicz/cksource-task.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/owojcikiewicz/cksource-task/issues"
+  },
+  "homepage": "https://github.com/owojcikiewicz/cksource-task#readme",
+  "dependencies": {
+    "typescript": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/node": "^18.6.3"
+  }
+}
