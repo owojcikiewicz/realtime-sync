@@ -1,15 +1,68 @@
 const socket = io("ws://localhost:3000");
 
-const setElementData = (id, type, data) => {
-    let element = document.getElementById(id);
-    if (!element) return null; 
+const checkInputElements = () => {
+    const inputElements = document.getElementsByTagName("input");
+    let inputs = {}; 
 
-    if (type == "text") {
-        element.value = data;
+    for (let i = 0; i < inputElements.length; ++i) {
+        const elementName = inputElements[i].name;
+        if (!inputs[elementName]) {
+            inputs[elementName] = document.getElementsByName(inputElements[i].name);
+        };
     };
 
+    return inputs;
+};
+
+const parseElement = (element) => {
+    const type = element.type;
+    let toReturn = {};
+
     if (type == "checkbox") {
-        element.checked = data == "true" ? true : false;
+        toReturn = {
+            name: element.name,
+            value: element.checked
+        };
+    };
+
+    if (type == "text") {
+        toReturn = {
+            name: element.name,
+            value: element.value
+        };
+    }; 
+
+    return toReturn;
+};
+
+const parseElements = (elements, toReturn) => {
+    for (let i = 0; i < elements.length; ++i) {
+        const element = elements[i];
+        const parsedElement = parseElement(element);
+
+        if (toReturn[parsedElement.name]) {
+            toReturn[parsedElement.name].push(parsedElement.value);
+        } 
+        else {
+            toReturn[parsedElement.name] = [parsedElement.value];
+        };
+    };
+
+    return toReturn;
+};
+
+const setElementData = (name, data) => {
+    for (let i = 1; i < data.length; ++i) {
+        const element = document.getElementByName(name)[i];
+        const type = element.type; 
+
+        if (type == "checkbox") {
+            element.checked = data[i]; 
+        };
+
+        if (type == "text") {
+            element.value = data[i];
+        };
     };
 };
 
@@ -21,13 +74,23 @@ socket.on("getInitialData", (data) => {
     console.log("received!");
 
     const payload = JSON.parse(data);
-    if (!payload || payload.length == 0) return; 
+    if (!payload) return; 
     
-    for (let i = 0; i < payload.length; i++) {
-        const element = payload[i];
-        console.log(element);
-        setElementData(element.id, element.type, element.value);
+    let elementsGiven = {};
+    for (let key in payload) {
+        const elementData = payload[key];
+        setElementData(key, elementData)
+
+        elementsGiven[key] = true;
     };
 
-    socket.emit("test", "I'm testing this shit");
-})
+    let elementsToSend = {};
+    const inputs = checkInputElements();
+    for (let x in inputs) {
+        if (elementsGiven[x] !== true) {
+            parseElements(Array.from(inputs[x]), elementsToSend);
+        };
+    };
+
+    socket.emit("sendMissingElements", JSON.stringify(elementsToSend));
+});
