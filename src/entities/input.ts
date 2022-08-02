@@ -9,9 +9,6 @@ export class Input {
     website: string; 
 
     @Column()
-    type: string; 
-
-    @Column()
     name: string; 
 
     @Column({type: "longtext"})
