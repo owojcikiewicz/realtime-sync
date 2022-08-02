@@ -13,10 +13,13 @@ export default async function(io: socket.Server, socket: socket.Socket, data: JS
     for (let elementName in data) {
         const element = data[elementName];
 
-        let missingElement = new Input();
-        missingElement.website = website;
-        missingElement.name = elementName;
-        missingElement.value = JSON.stringify(element);
-        await repository.save(missingElement);
+        let input = await repository.findOneBy({website: website, name: elementName});
+        if (!input) {
+            let missingElement = new Input();
+            missingElement.website = website;
+            missingElement.name = elementName;
+            missingElement.value = JSON.stringify(element);
+            await repository.save(missingElement);
+        };
     };
 };
