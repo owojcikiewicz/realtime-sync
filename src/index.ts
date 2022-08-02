@@ -5,11 +5,12 @@ import * as db from "./services/db";
 import * as http from "http";
 import * as socket from "socket.io";
 import ConnectionHandler from "./handlers/connection";
+import MissingElementsHandler from "./handlers/missing";
 
 (async () => {
     dotenv.config();
 
-   // Setup Database. 
+    // Setup Database. 
     await db.setup();
 
     // Initialize Express app. 
@@ -23,8 +24,13 @@ import ConnectionHandler from "./handlers/connection";
 
     io.on("connection", async (socket: socket.Socket) => {
         ConnectionHandler(io, socket);
+
+        socket.on("sendMissingElements", (data: string) => {
+            MissingElementsHandler(io, socket, JSON.parse(data));
+        });
     });
 
+    // Listen on port. 
     server.listen(process.env.APP_PORT, () => {
         console.log(`Server is running on port ${process.env.APP_PORT}`);
     });
