@@ -12,8 +12,8 @@ export class Input {
     type: string; 
 
     @Column()
-    id: string; 
+    name: string; 
 
-    @Column()
+    @Column({type: "longtext"})
     value: string; 
 };
