@@ -5,7 +5,8 @@ import * as db from "./services/db";
 import * as http from "http";
 import * as socket from "socket.io";
 import ConnectionHandler from "./handlers/connection";
-import MissingElementsHandler from "./handlers/missing";
+import MissingElementsHandler from "./handlers/missingelements";
+import ChangeDataHandler from "./handlers/changedata";
 
 (async () => {
     dotenv.config();
@@ -22,11 +23,16 @@ import MissingElementsHandler from "./handlers/missing";
     const server: http.Server = http.createServer(app); 
     const io: socket.Server = new socket.Server(server, {});
 
+    // Setup Socket handlers.
     io.on("connection", async (socket: socket.Socket) => {
         ConnectionHandler(io, socket);
 
         socket.on("sendMissingElements", (data: string) => {
             MissingElementsHandler(io, socket, JSON.parse(data));
+        });
+
+        socket.on("changeData", (data: string) => {
+            ChangeDataHandler(io, socket, JSON.parse(data));
         });
     });
 

@@ -21,9 +21,12 @@ const listenForChanges = (elements) => {
         const element = elements[i];
 
         element.addEventListener("change", (event) => {
-            if (!socket.connected) return; 
+            const elements = document.getElementsByName(event.target.name);
+            const parsedGroup = parseElements(Array.from(elements), {})
             
-            console.log(event.target.type);
+            socket.emit("changeData", JSON.stringify({
+                changes: parsedGroup
+            }));
         });
     };
 };
@@ -97,7 +100,6 @@ const setElementData = (name, data) => {
             element.value = data[i].value;
         };
 
-        
         if (type == "radio") {
             element.checked = data[i].value; 
         };
@@ -142,4 +144,10 @@ socket.on("getInitialData", (data) => {
     if (Object.keys(elementsToSend).length > 0) {
         socket.emit("sendMissingElements", JSON.stringify(elementsToSend));
     };
+});
+
+// Receive changes from server. 
+socket.on("receivedChanges", (data) => {
+    const payload = JSON.parse(data);
+    setElementData(Object.keys(payload)[0], payload[Object.keys(payload)[0]]);
 });
