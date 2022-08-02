@@ -36,6 +36,14 @@ const parseElement = (element) => {
         };
     }; 
 
+    if (type == "radio") {
+        toReturn = {
+            name: element.name,
+            value: element.checked,
+            type: "radio"
+        };
+    };
+
     return toReturn;
 };
 
@@ -74,6 +82,11 @@ const setElementData = (name, data) => {
 
         if (type == "text") {
             element.value = data[i].value;
+        };
+
+        
+        if (type == "radio") {
+            element.checked = data[i].value; 
         };
     };
 };
