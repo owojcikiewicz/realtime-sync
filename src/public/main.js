@@ -15,6 +15,19 @@ const checkInputElements = () => {
     return inputs;
 };
 
+// Add event listener to element. 
+const listenForChanges = (elements) => {
+    for (let i = 0; i < elements.length; ++i) {
+        const element = elements[i];
+
+        element.addEventListener("change", (event) => {
+            if (!socket.connected) return; 
+            
+            console.log(event.target.type);
+        });
+    };
+};
+
 // Parse a particular element to a format for the server.
 const parseElement = (element) => {
     const type = element.type;
@@ -104,8 +117,6 @@ socket.on("getInitialData", (data) => {
 
     let elementsGiven = {};
     for (let i = 0; i < payload.length; ++i) {
-        console.log(payload[i]);
-
         const categoryName = payload[i].name;
         const categoryValue = payload[i].value;
 
@@ -113,13 +124,18 @@ socket.on("getInitialData", (data) => {
         elementsGiven[categoryName] = true;
     };
 
-    let elementsToSend = {};
     const inputs = checkInputElements();
+    let elementsToSend = {};
     for (let x in inputs) {
+        const inputsArray = Array.from(inputs[x]);
+
         // If an element's state was not given, let the server know. 
         if (elementsGiven[x] !== true) {
-            parseElements(Array.from(inputs[x]), elementsToSend);
+            parseElements(inputsArray, elementsToSend);
         };
+
+        // Add event listeners. 
+        listenForChanges(inputsArray);
     };
 
     // Send any missing elements to the server. 
