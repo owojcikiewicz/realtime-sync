@@ -24,9 +24,19 @@ const listenForChanges = (elements) => {
             const elements = document.getElementsByName(event.target.name);
             const parsedGroup = parseElements(Array.from(elements), {})
             
-            socket.emit("changeData", JSON.stringify({
-                changes: parsedGroup
-            }));
+            if (socket.connected === true) {
+                console.log(JSON.stringify({parsedGroup}));
+                socket.emit("changeData", JSON.stringify(parsedGroup));
+            }
+            else {
+                socket.emit("changeDataOffline", JSON.stringify({
+                    payload: parsedGroup,
+                    dataset: element._oldValues
+                }));
+            };
+
+            console.log(element._oldValues);
+            element._oldValues = parsedGroup;
         });
     };
 };
@@ -103,11 +113,13 @@ const setElementData = (name, data) => {
         if (type == "radio") {
             element.checked = data[i].value; 
         };
+
+        element._oldValues = parseElements(Array.from(document.getElementsByName(name)), {});
     };
 };
 
 socket.on("connect", () => {
-    console.log("connected (client)");
+    console.log("connected");
 });
 
 // Receive initial elements data from the server. 

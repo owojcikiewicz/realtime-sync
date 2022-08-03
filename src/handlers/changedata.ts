@@ -9,12 +9,11 @@ export default async function(io: socket.Server, socket: socket.Socket, data: JS
         return;
     };
 
-    const changes = data["changes"];
-    const category = Object.keys(changes)[0]
-    socket.broadcast.to(website).emit("receivedChanges", JSON.stringify(changes));
+    const category = Object.keys(data)[0]
+    socket.broadcast.to(website).emit("receivedChanges", JSON.stringify(data));
 
     let repository = db.Connection.getRepository(Input);
     let input = await repository.findOneBy({website: website, name: category});
-    input.value = JSON.stringify(changes[category]);
+    input.value = JSON.stringify(data[category]);
     await repository.save(input);
 };
