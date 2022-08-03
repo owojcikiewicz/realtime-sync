@@ -149,5 +149,8 @@ socket.on("getInitialData", (data) => {
 // Receive changes from server. 
 socket.on("receivedChanges", (data) => {
     const payload = JSON.parse(data);
-    setElementData(Object.keys(payload)[0], payload[Object.keys(payload)[0]]);
+    const category = Object.keys(payload)[0];
+    const value = payload[category];
+
+    setElementData(category, value);
 });

@@ -10,11 +10,11 @@ export default async function(io: socket.Server, socket: socket.Socket, data: JS
     };
 
     const changes = data["changes"];
-    const payload = changes[Object.keys(changes)[0]];
-    socket.broadcast.to(website).emit("receivedChanges", JSON.stringify(payload));
+    const category = Object.keys(changes)[0]
+    socket.broadcast.to(website).emit("receivedChanges", JSON.stringify(changes));
 
     let repository = db.Connection.getRepository(Input);
-    let input = await repository.findOneBy({website: website, name: Object.keys(changes)[0]});
-    input.value = JSON.stringify(payload);
+    let input = await repository.findOneBy({website: website, name: category});
+    input.value = JSON.stringify(changes[category]);
     await repository.save(input);
 };
