@@ -7,6 +7,7 @@ import * as socket from "socket.io";
 import ConnectionHandler from "./handlers/connection";
 import MissingElementsHandler from "./handlers/missingelements";
 import ChangeDataHandler from "./handlers/changedata";
+import ChangeDataOfflineHandler from "./handlers/changedataoffline";
 
 (async () => {
     dotenv.config();
@@ -33,6 +34,10 @@ import ChangeDataHandler from "./handlers/changedata";
 
         socket.on("changeData", (data: string) => {
             ChangeDataHandler(io, socket, JSON.parse(data));
+        });
+
+        socket.on("changeDataOffline", (data: string) => {
+            ChangeDataOfflineHandler(io, socket, JSON.parse(data));
         });
     });
 

@@ -25,17 +25,16 @@ const listenForChanges = (elements) => {
             const parsedGroup = parseElements(Array.from(elements), {})
             
             if (socket.connected === true) {
-                console.log(JSON.stringify({parsedGroup}));
                 socket.emit("changeData", JSON.stringify(parsedGroup));
             }
             else {
+                // Send the current dataset to the server for comparison. 
                 socket.emit("changeDataOffline", JSON.stringify({
                     payload: parsedGroup,
                     dataset: element._oldValues
                 }));
             };
 
-            console.log(element._oldValues);
             element._oldValues = parsedGroup;
         });
     };
