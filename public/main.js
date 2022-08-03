@@ -1,5 +1,9 @@
 const socket = io("ws://localhost:3000");
 
+const IS_CONNECTED = Math.floor(Math.random() * 2) == 1; 
+
+console.log(IS_CONNECTED);
+
 // Get all input elements. 
 const checkInputElements = () => {
     const inputElements = document.getElementsByTagName("input");
@@ -24,7 +28,7 @@ const listenForChanges = (elements) => {
             const elements = document.getElementsByName(event.target.name);
             const parsedGroup = parseElements(Array.from(elements), {})
             
-            if (socket.connected === true) {
+            if (IS_CONNECTED) {
                 socket.emit("changeData", JSON.stringify(parsedGroup));
             }
             else {
@@ -33,6 +37,11 @@ const listenForChanges = (elements) => {
                     payload: parsedGroup,
                     dataset: element._oldValues
                 }));
+
+                // Track edited categories while offline. 
+                if (socket._editedCategories) {
+                    socket._editedCategories.push(Object.keys(parsedGroup)[0]);
+                };
             };
 
             element._oldValues = parsedGroup;
@@ -121,6 +130,10 @@ socket.on("connect", () => {
     console.log("connected");
 });
 
+socket.on("disconnect", () => {
+    socket._editedCategories = [];
+});
+
 // Receive initial elements data from the server. 
 socket.on("getInitialData", (data) => {
     console.log("received!");
@@ -133,8 +146,17 @@ socket.on("getInitialData", (data) => {
         const categoryName = payload[i].name;
         const categoryValue = payload[i].value;
 
-        setElementData(categoryName, JSON.parse(categoryValue));
+        // If the category was edited while offline, don't set the values. 
+        if (!socket._editedCategories.includes(categoryName)) {
+            setElementData(categoryName, JSON.parse(categoryValue));
+        };
+        
         elementsGiven[categoryName] = true;
+    };
+
+    // Clear the edited offline array. 
+    if (socket._editedCategories) {
+        socket._editedCategories = [];
     };
 
     const inputs = checkInputElements();
@@ -163,5 +185,7 @@ socket.on("receivedChanges", (data) => {
     const category = Object.keys(payload)[0];
     const value = payload[category];
 
-    setElementData(category, value);
+    if (IS_CONNECTED) {
+        setElementData(category, value);
+    };
 });
