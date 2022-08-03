@@ -18,7 +18,7 @@ import ChangeDataOfflineHandler from "./handlers/changedataoffline";
     // Initialize Express app. 
     const app: express.Application = express();
     app.use(express.json());
-    app.use(express.static(path.join(__dirname, "public")));
+    app.use(express.static(path.join(__dirname, "../public")));
 
     // Setup Socket and HTTP server. 
     const server: http.Server = http.createServer(app); 
