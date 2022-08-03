@@ -1,9 +1,5 @@
 const socket = io("ws://localhost:3000");
 
-const IS_CONNECTED = Math.floor(Math.random() * 2) == 1; 
-
-console.log(IS_CONNECTED);
-
 // Get all input elements. 
 const checkInputElements = () => {
     const inputElements = document.getElementsByTagName("input");
@@ -28,7 +24,7 @@ const listenForChanges = (elements) => {
             const elements = document.getElementsByName(event.target.name);
             const parsedGroup = parseElements(Array.from(elements), {})
             
-            if (IS_CONNECTED) {
+            if (socket.connected) {
                 socket.emit("changeData", JSON.stringify(parsedGroup));
             }
             else {
@@ -185,7 +181,5 @@ socket.on("receivedChanges", (data) => {
     const category = Object.keys(payload)[0];
     const value = payload[category];
 
-    if (IS_CONNECTED) {
-        setElementData(category, value);
-    };
+    setElementData(category, value);
 });
