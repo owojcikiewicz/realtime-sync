@@ -190,3 +190,8 @@ socket.on("receivedChanges", (data) => {
 
     setElementData(category, value);
 });
+
+// Notify about rate limit. 
+socket.on("rateLimited", (data) => {
+    alert(`You are being rate limited!\nNext change will be available in ${data} seconds.`);
+});
