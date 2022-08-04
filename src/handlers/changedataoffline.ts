@@ -22,11 +22,13 @@ export default async function(io: socket.Server, socket: socket.Socket, data: JS
         if (JSON.stringify(dataset) === JSON.stringify(currentDataset)) {
             socket.broadcast.to(website).emit("receivedChanges", JSON.stringify(payload));
             input.value = JSON.stringify(payload[category]);
-            await repository.save(input);
+            await repository.save(input);   
         }
         else {
             // If the client's edits were discarded, send the current dataset.
-            socket.emit("receivedChanges", JSON.stringify(payload));
+            let toSend = {};
+            toSend[input.name] = JSON.parse(input.value);
+            socket.emit("receivedChanges", JSON.stringify(toSend));
         };
     };
 };
