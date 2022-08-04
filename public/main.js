@@ -1,18 +1,71 @@
-const socket = io("ws://localhost:3000");
+const socket = io("ws://192.248.188.133:2001");
+
+// Initialize oldValues object.  
+let oldValues = {};
 
 // Get all input elements. 
-const checkInputElements = () => {
+const getInputElements = () => {
     const inputElements = document.getElementsByTagName("input");
-    let inputs = {}; 
 
+    let inputs = {}; 
     for (let i = 0; i < inputElements.length; ++i) {
         const elementName = inputElements[i].name;
         if (!inputs[elementName]) {
             inputs[elementName] = document.getElementsByName(inputElements[i].name);
         };
     };
-
+    
     return inputs;
+};
+
+// Parse multiple elements.  
+const parseElements = (elements, toReturn) => {
+    const parseElement = (element) => {
+        const type = element.type;
+        let toReturn = {};
+    
+        if (type == "checkbox") {
+            toReturn = {
+                name: element.name,
+                value: element.checked,
+                type: "checkbox"
+            };
+        };
+    
+        if (type == "text") {
+            toReturn = {
+                name: element.name,
+                value: element.value,
+                type: "text"
+            };
+        }; 
+    
+        if (type == "radio") {
+            toReturn = {
+                name: element.name,
+                value: element.checked,
+                type: "radio"
+            };
+        };
+    
+        return toReturn;
+    };
+    
+    for (let i = 0; i < elements.length; ++i) {
+        const element = elements[i];
+        const parsedElement = parseElement(element);
+
+        if (!toReturn[parsedElement.name]) {
+            toReturn[parsedElement.name] = [];
+        }; 
+
+        toReturn[parsedElement.name].push({
+            type: parsedElement.type,
+            value: parsedElement.value
+        });
+    };
+
+    return toReturn;
 };
 
 // Add event listener to element. 
@@ -22,16 +75,17 @@ const listenForChanges = (elements) => {
 
         element.addEventListener("change", (event) => {
             const elements = document.getElementsByName(event.target.name);
-            const parsedGroup = parseElements(Array.from(elements), {})
+            let parsedGroup = {};
+            parseElements(Array.from(elements), parsedGroup);
             
             if (socket.connected) {
                 socket.emit("changeData", JSON.stringify(parsedGroup));
             }
             else {
-                // Send the current dataset to the server for comparison. 
+                // Send the state of the elements on disconnect.  
                 socket.emit("changeDataOffline", JSON.stringify({
                     payload: parsedGroup,
-                    dataset: element._oldValues
+                    dataset: oldValues[event.target.name]
                 }));
 
                 // Track edited categories while offline. 
@@ -39,65 +93,8 @@ const listenForChanges = (elements) => {
                     socket._editedCategories.push(Object.keys(parsedGroup)[0]);
                 };
             };
-
-            element._oldValues = parsedGroup;
         });
     };
-};
-
-// Parse a particular element to a format for the server.
-const parseElement = (element) => {
-    const type = element.type;
-    let toReturn = {};
-
-    if (type == "checkbox") {
-        toReturn = {
-            name: element.name,
-            value: element.checked,
-            type: "checkbox"
-        };
-    };
-
-    if (type == "text") {
-        toReturn = {
-            name: element.name,
-            value: element.value,
-            type: "text"
-        };
-    }; 
-
-    if (type == "radio") {
-        toReturn = {
-            name: element.name,
-            value: element.checked,
-            type: "radio"
-        };
-    };
-
-    return toReturn;
-};
-
-// Parse multiple elements.  
-const parseElements = (elements, toReturn) => {
-    for (let i = 0; i < elements.length; ++i) {
-        const element = elements[i];
-        const parsedElement = parseElement(element);
-
-        if (toReturn[parsedElement.name]) {
-            toReturn[parsedElement.name].push({
-                type: parsedElement.type,
-                value: parsedElement.value
-            });
-        } 
-        else {
-            toReturn[parsedElement.name] = [{
-                type: parsedElement.type,
-                value: parsedElement.value
-            }];
-        };
-    };
-
-    return toReturn;
 };
 
 // Set the value of a particular element.
@@ -117,25 +114,39 @@ const setElementData = (name, data) => {
         if (type == "radio") {
             element.checked = data[i].value; 
         };
-
-        element._oldValues = parseElements(Array.from(document.getElementsByName(name)), {});
     };
 };
 
 socket.on("connect", () => {
-    console.log("connected");
+    // We restored connection, therefore empty oldValues.
+    oldValues = {};
 });
 
 socket.on("disconnect", () => {
     socket._editedCategories = [];
+
+    // Save the state of all inputs on disconnect. 
+    const inputs = getInputElements();
+    for (let category in inputs) {
+        if (!oldValues[category]) {
+            let parsedGroup = {};
+            parseElements(Array.from(inputs[category]), parsedGroup);
+            oldValues[category] = parsedGroup;
+        };
+    }; 
 });
 
 // Receive initial elements data from the server. 
 socket.on("getInitialData", (data) => {
-    console.log("received!");
-
     const payload = JSON.parse(data);
+    const inputs = getInputElements();    
     if (!payload) return;
+    if (!inputs) return; 
+
+    // Setup event listeners. 
+    for (let x in inputs) {
+        listenForChanges(Array.from(inputs[x]));
+    };
 
     let elementsGiven = {};
     for (let i = 0; i < payload.length; ++i) {
@@ -143,7 +154,7 @@ socket.on("getInitialData", (data) => {
         const categoryValue = payload[i].value;
 
         // If the category was edited while offline, don't set the values. 
-        if (!socket._editedCategories.includes(categoryName)) {
+        if (!socket._editedCategories || !socket._editedCategories.includes(categoryName)) {
             setElementData(categoryName, JSON.parse(categoryValue));
         };
         
@@ -155,7 +166,6 @@ socket.on("getInitialData", (data) => {
         socket._editedCategories = [];
     };
 
-    const inputs = checkInputElements();
     let elementsToSend = {};
     for (let x in inputs) {
         const inputsArray = Array.from(inputs[x]);
@@ -164,9 +174,6 @@ socket.on("getInitialData", (data) => {
         if (elementsGiven[x] !== true) {
             parseElements(inputsArray, elementsToSend);
         };
-
-        // Add event listeners. 
-        listenForChanges(inputsArray);
     };
 
     // Send any missing elements to the server. 
