@@ -1,5 +1,5 @@
-### CKSource Task
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+### Real-time Sync
+Real-time Sync enables collaborative editing of HTML inputs in real-time across multiple websites and clients. The project is built using WebSockets and can - in principle - support an unlimited amount of websites with multiple elements. This was initially built as a recruitment task for an unnamed company. 
 
 [Live Demo](http://192.248.188.133:2001/)
 
